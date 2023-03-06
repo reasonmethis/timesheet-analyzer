@@ -1,8 +1,83 @@
 import pandas as pd
+import os
+
 
 TIMESHEET_FILE = 'WC_Clockify_Time_Report_Detailed_01_29_2023-02_04_2023.csv'
 # TIMESHEET_FILE = 'test.csv'
 N_LINES_FOR_TERMINAL_PROMPT = 37
+
+def clean_and_combine_timesheets(directory):
+    """
+    Takes a directory as an argument and does the following:
+    - Finds all CSV files in the directory
+    - Reads each of them into a pandas dataframe
+    - Cleans them up (assuming they are Clockify timesheets)
+    - Concatenates these dataframes
+    - Saves the resulting dataframe in a CSV file
+    
+    Args:
+    directory (str): The directory to search for CSV files.
+    
+    Returns:
+    None
+    """
+    # Get a list of all CSV files in the directory and sort them in reverse order
+    csv_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.csv')]
+    csv_files.sort(reverse=True)
+
+    # Show the sorted list to the user and ask for confirmation
+    print(f"Found the following CSV files in {directory}:")
+    for file in csv_files:
+        print(f"  - {os.path.basename(file)}")
+    user_input = input("Do you want to concatenate these files? (y/n) ")
+    if user_input.lower() != 'y':
+        print("Aborting.")
+        return
+
+    # Loop through each CSV file and read it into a pandas dataframe
+    dataframes = []
+    for file in csv_files:
+        df = clean_up(pd.read_csv(file))
+        print(f"Read {len(df)} rows from {os.path.basename(file)}")
+        dataframes.append(df)
+
+    # Concatenate the dataframes into a single dataframe
+    concatenated_df = pd.concat(dataframes)
+    #print(f"{len(concatenated_df)} rows in the concatenated dataframe. Saving.")
+    print_dataframe(concatenated_df, 4, 4)
+
+    # Save the resulting dataframe in a CSV file
+    concatenated_df.to_csv(os.path.join(directory, 'timesheet.csv'), index=False)
+
+def print_dataframe(df, num_first_rows=3, num_last_rows=3):
+    """
+    This function takes a pandas dataframe as an argument and prints it out in a nice, tabular format.
+    If the dataframe has more than (num_first_rows + num_last_rows) rows, it will only print the first 
+    num_first_rows and last num_last_rows rows.
+    
+    Args:
+    df (pandas.DataFrame): The dataframe to print.
+    num_first_rows (int): The number of rows to print at the beginning of the dataframe if it is too large.
+    num_last_rows (int): The number of rows to print at the end of the dataframe if it is too large.
+    
+    Returns:
+    None
+    """
+    num_rows = df.shape[0]
+    if num_rows <= (num_first_rows + num_last_rows):
+        # Print the whole dataframe
+        print(f"Dataframe shape: {df.shape}")
+        print('-' * 80)
+        print(df.to_string(index=False))
+        print('-' * 80)
+    else:
+        # Print only the first and last few rows
+        print(f"Dataframe shape: {df.shape} (showing first {num_first_rows} and last {num_last_rows} rows)")
+        print('-' * 80)
+        print(df.head(num_first_rows).to_string(index=False))
+        print('...')
+        print(df.tail(num_last_rows).to_string(index=False))
+        print('-' * 80)
 
 def clean_and_categorize_raw_timesheet(save=True):
     """
@@ -213,9 +288,16 @@ def extract_task_to_category_dict(categorized_timesheet_df):
 
 
 if __name__ == '__main__':
-    categorized_timesheet_df = pd.read_csv('timesheet-with-categories.csv')
+    # TASK: combining and cleaning
+    clean_and_combine_timesheets('timesheets/')
+    # TASK: preliminary 
+    # categorized_timesheet_df = pd.read_csv('timesheet-with-categories.csv')
+    # TASK: filtering by category 
     # print(df := filter_by_category(categorized_timesheet_df, 'Communication and planning'))
+    # TASK: aggregating by task
     # print(aggregate_by_task_and_date(categorized_timesheet_df))
+    # TASK: editing categories 
     # new_df = review_and_edit_categories(categorized_timesheet_df)
     # save_df(new_df, "new.csv")
-    save_hours_by_category(categorized_timesheet_df)
+    # TASK: aggregating by category and saving
+    # save_hours_by_category(categorized_timesheet_df)
