@@ -2,7 +2,7 @@ import pandas as pd
 import os
 
 
-TIMESHEET_FILE = 'WC_Clockify_Time_Report_Detailed_01_29_2023-02_04_2023.csv'
+TIMESHEET_FILE = ''
 # TIMESHEET_FILE = 'test.csv'
 N_LINES_FOR_TERMINAL_PROMPT = 37
 
